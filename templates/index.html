@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <title>Voice GPT</title>
+</head>
+
+<body>
+  <h1>Welcome To Voice GPT</h1>
+
+  <div>
+    <button id="start">Start</button>
+    <button id="stop">Stop</button>
+  </div>
+
+  <div class="chats">
+    <h2>Your Responses</h2>
+    <div>Question: Your Question</div>
+    <div>Answer: Response will appear here</div>
+    <hr>
+  </div>
+
+  <script>
+    const populateUsingGpt = async (input) => {
+      const response = await fetch("/api", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ input }),
+      });
+      const data = await response.json();
+      const chatsDiv = document.querySelector(".chats");
+      chatsDiv.innerHTML += `<div>Question: ${input}</div><div>Answer: ${data.message}</div><hr>`;
+    };
+
+    let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.interimResults = true;
+    let speech = true;
+    let globalTranscript = "";
+
+    recognition.addEventListener('result', e => {
+      const transcript = Array.from(e.results)
+        .map(result => result[0])
+        .map(result => result.transcript)
+        .join('');
+
+      globalTranscript = transcript;
+    });
+
+    document.getElementById("start").addEventListener("click", () => {
+      if (speech) {
+        recognition.start();
+      }
+    });
+
+    recognition.addEventListener('end', () => {
+      if (globalTranscript) {
+        populateUsingGpt(globalTranscript);
+      }
+      globalTranscript = "";
+    });
+  </script>
+</body>
+
+</html>
